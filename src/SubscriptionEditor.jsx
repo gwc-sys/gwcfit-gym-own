@@ -15,11 +15,11 @@ function PlanForm({ plan, accessToken, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
 
-  useEffect(() => setDraft(toDraft(plan)), [plan]);
   const set = (field, value) => setDraft((current) => ({ ...current, [field]: value }));
 
   const submit = async (event) => {
     event.preventDefault();
+    if (saving) return;
     setSaving(true);
     setStatus('');
     try {
@@ -29,7 +29,7 @@ function PlanForm({ plan, accessToken, onSaved }) {
         description: draft.description.trim(),
         price_cents: price === '' ? null : Math.round(Number(price) * 100),
         currency: draft.currency.trim().toUpperCase(),
-        billing_period: draft.billing_period.trim() || null,
+        billing_period: (draft.billing_period || '').trim() || null,
         member_limit: draft.member_limit.trim(),
         features: draft.features_text.split('\n').map((item) => item.trim()).filter(Boolean),
         cta_label: draft.cta_label.trim(),
@@ -40,7 +40,7 @@ function PlanForm({ plan, accessToken, onSaved }) {
       }, accessToken);
       setDraft(toDraft(updated));
       setStatus('Saved');
-      onSaved();
+      onSaved(updated);
     } catch (error) {
       setStatus(error.message || 'Could not save this plan.');
     } finally {
@@ -53,7 +53,7 @@ function PlanForm({ plan, accessToken, onSaved }) {
     <label>Plan name<input required maxLength={80} value={draft.name} onChange={(e) => set('name', e.target.value)}/></label>
     <label>Description<textarea required maxLength={300} rows="3" value={draft.description} onChange={(e) => set('description', e.target.value)}/></label>
     <div className="subscription-fields">
-      <label>Price (₹)<input min="0" step="0.01" type="number" placeholder="Blank = Custom" value={draft.price_rupees} onChange={(e) => set('price_rupees', e.target.value)}/></label>
+      <label>Price ({draft.currency || "currency"})<input min="0" step="0.01" type="number" placeholder="Blank = Custom" value={draft.price_rupees} onChange={(e) => set('price_rupees', e.target.value)}/></label>
       <label>Currency<input required maxLength={3} value={draft.currency} onChange={(e) => set('currency', e.target.value)}/></label>
       <label>Billing period<input placeholder="month" value={draft.billing_period || ''} onChange={(e) => set('billing_period', e.target.value)}/></label>
       <label>Display order<input required type="number" value={draft.display_order} onChange={(e) => set('display_order', e.target.value)}/></label>
@@ -65,7 +65,7 @@ function PlanForm({ plan, accessToken, onSaved }) {
       <label>Free trial days<input required min="0" max="365" type="number" value={draft.trial_days} onChange={(e) => set('trial_days', e.target.value)}/></label>
     </div>
     <label className="switch-field"><input type="checkbox" checked={draft.is_popular} onChange={(e) => set('is_popular', e.target.checked)}/> Show “Most popular” badge</label>
-    <div className="subscription-save"><span className={status === 'Saved' ? 'save-ok' : 'save-error'}>{status === 'Saved' ? <Check size={15}/> : null}{status}</span><button className="btn btn-lime" type="submit" disabled={saving}>{saving ? <LoaderCircle className="spin" size={17}/> : <Save size={17}/>} {saving ? 'Saving…' : 'Save plan'}</button></div>
+    <div className="subscription-save"><span role="status" aria-live="polite" className={status === 'Saved' ? 'save-ok' : 'save-error'}>{status === 'Saved' ? <Check size={15}/> : null}{status}</span><button className="btn btn-lime" type="submit" disabled={saving}>{saving ? <LoaderCircle className="spin" size={17}/> : <Save size={17}/>} {saving ? 'Saving…' : 'Save plan'}</button></div>
   </form>;
 }
 
@@ -85,8 +85,8 @@ export default function SubscriptionEditor({ session, onSaved }) {
     loadPlans().finally(() => setLoading(false));
   }, [token]);
 
-  const refreshAfterSave = () => {
-    loadPlans();
+  const refreshAfterSave = (updated) => {
+    setPlans((current) => current.map((plan) => plan.id === updated.id ? updated : plan));
     onSaved();
   };
 
