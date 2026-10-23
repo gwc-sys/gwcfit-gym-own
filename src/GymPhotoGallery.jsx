@@ -1,0 +1,13 @@
+﻿import React, { useState } from 'react';
+import { ArrowLeft, ArrowRight, Images, X } from 'lucide-react';
+import useModal from './useModal';
+import { useGymWebsiteEditor, InlinePhotos } from './GymWebsiteEditor';
+
+export default function GymPhotoGallery({ gym }) {
+  const editor = useGymWebsiteEditor();
+  const photos = (gym.gallery_photos || []).filter((photo) => photo && typeof photo.url === 'string' && /^(https?:\/\/|\/(?!\/)|data:image\/(?:png|jpeg|webp);base64,)/.test(photo.url));
+  const [selected, setSelected] = useState(null);
+  const dialogRef = useModal(selected !== null, () => setSelected(null));
+  const move = (direction) => setSelected((index) => (index + direction + photos.length) % photos.length);
+  return <section className="shell gym-site-section" id="gallery"><span className="eyebrow">Take a look inside</span><h2>Photo gallery.</h2><p>Explore the space at {gym.name}.</p>{editor?.editing ? <InlinePhotos field="gallery_photos" title="Gallery photos" max={40}/> : photos.length ? <div className="gym-photo-grid">{photos.map((photo,index) => <button key={`${photo.url}-${index}`} onClick={() => setSelected(index)} aria-label={`View photo ${index + 1}: ${photo.caption || gym.name}`}><img src={photo.url} alt={photo.caption || `${gym.name} — photo ${index + 1}`} loading="lazy"/><span>{photo.caption || `Photo ${index + 1}`}</span></button>)}</div> : <div className="gym-gallery-empty"><Images size={32}/><h3>Photos coming soon.</h3><p>This gym has not published photos yet.</p></div>}{selected !== null && photos[selected] ? <div className="gym-photo-overlay" onClick={(event) => { if (event.target === event.currentTarget) setSelected(null); }}><div ref={dialogRef} className="gym-photo-viewer" role="dialog" aria-modal="true" aria-label={`${gym.name} photo gallery`} tabIndex={-1} onKeyDown={(event) => { if (event.key === 'ArrowLeft') { event.preventDefault(); move(-1); } if (event.key === 'ArrowRight') { event.preventDefault(); move(1); } }}><button className="gym-photo-close" aria-label="Close photo gallery" onClick={() => setSelected(null)}><X/></button><img src={photos[selected].url} alt={photos[selected].caption || `${gym.name} — photo ${selected + 1}`}/><div className="gym-photo-controls"><button aria-label="Previous photo" disabled={photos.length < 2} onClick={() => move(-1)}><ArrowLeft/></button><p aria-live="polite">{photos[selected].caption || gym.name}<small>{selected + 1} / {photos.length}</small></p><button aria-label="Next photo" disabled={photos.length < 2} onClick={() => move(1)}><ArrowRight/></button></div></div></div> : null}</section>;
+}

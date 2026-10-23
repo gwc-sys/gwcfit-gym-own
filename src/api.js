@@ -69,6 +69,15 @@ export const ownerApi = {
   publicPlans() {
     return request('/platform-plans/public');
   },
+  publicGymWebsite(gymId) {
+    return request(`/gyms/public/${encodeURIComponent(gymId)}/website`);
+  },
+  gymWebsiteEditor(gymId, token) {
+    return request(`/gyms/${encodeURIComponent(gymId)}/website`, { headers: { Authorization: `Bearer ${token}` } });
+  },
+  saveGymWebsite(gymId, payload, token) {
+    return request(`/gyms/${encodeURIComponent(gymId)}/website`, { method: 'PATCH', headers: { Authorization: `Bearer ${token}` }, body: JSON.stringify(payload) });
+  },
   publicGyms(location) {
     const params = location ? `?latitude=${encodeURIComponent(location.latitude)}&longitude=${encodeURIComponent(location.longitude)}` : '';
     return request(`/gyms/public/directory${params}`);

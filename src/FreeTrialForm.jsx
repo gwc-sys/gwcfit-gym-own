@@ -37,7 +37,7 @@ export default function FreeTrialForm({ plans, selectedPlanId }) {
 
   return <form onSubmit={submit}>
     <div className="form-title"><b>Register your gym with PulseFit</b><small>This form is for gym owners and authorised gym managers.</small></div>
-    <label>Owner or manager name<input name="full_name" required minLength="2" placeholder="e.g. Arjun Kumar"/></label>
+    <label>Owner or manager name<input name="full_name" required minLength="2" placeholder="e.g. Ganesh R"/></label>
     <label>Work email<input name="email" required type="email" placeholder="you@yourgym.com"/></label>
     <label>Mobile number<input name="phone" required type="tel" minLength="8" maxLength="40" autoComplete="tel" placeholder="e.g. +91 98765 43210"/></label>
     <label>Gym name<input name="gym_name" required minLength="2" placeholder="Your gym"/></label>
