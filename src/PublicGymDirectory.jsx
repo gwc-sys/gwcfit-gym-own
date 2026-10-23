@@ -73,7 +73,7 @@ function GymDetails({ gym, onClose }) {
     </div></div></article></div>;
 }
 
-export default function PublicGymDirectory() {
+export default function PublicGymDirectory({ onListedCount }) {
   const [gyms, setGyms] = useState([]), [location, setLocation] = useState(null), [query, setQuery] = useState(''), [distance, setDistance] = useState('all'), [verifiedOnly, setVerifiedOnly] = useState(false), [selected, setSelected] = useState(null), [compare, setCompare] = useState([]);
   const [state, setState] = useState({ loading: true, error: '', locating: false });
   const requestVersion = useRef(0);
@@ -81,7 +81,7 @@ export default function PublicGymDirectory() {
     const version = ++requestVersion.current;
     setState((s) => ({ ...s, loading: true, error: '' }));
     return ownerApi.publicGyms(nextLocation)
-      .then((items) => { if (version === requestVersion.current) setGyms(items); })
+      .then((items) => { if (version === requestVersion.current) { setGyms(items); if (!nextLocation) onListedCount?.(items.length); } })
       .catch((error) => { if (version === requestVersion.current) setState((s) => ({ ...s, error: error.message })); })
       .finally(() => { if (version === requestVersion.current) setState((s) => ({ ...s, loading: false })); });
   };
